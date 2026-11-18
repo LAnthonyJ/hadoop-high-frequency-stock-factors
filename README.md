@@ -67,6 +67,8 @@ For other inputs, preserve the [sample’s positional CSV layout](examples/snaps
 
 ## Course results
 
+![Side-by-side pipelines. The full-sort baseline shuffles 7.2 million detail records and takes over 100 seconds. Single-pass aggregation combines sums and counts locally, shuffles partial results, then computes timestamp means and changes in 24 seconds end to end.](docs/images/shuffle-comparison.png)
+
 In the original pseudo-distributed Docker experiment, the full-sort baseline sent **7.2 million detail records** into the shuffle and took **more than 100 seconds** end to end. The final single-job design finished in **24 seconds** in that environment. These figures come from the course evaluation. The four-row example above demonstrates correctness on a small input. [Technical report, §6.1 (PDF, Chinese)](docs/report.pdf)
 
 [Assignment brief (PDF)](docs/assignment.pdf) · [Architecture slides (PowerPoint, Chinese)](docs/高频数据量化因子分布式计算架构.pptx) · [Job configuration and CSV writer](src/main/java/driver/MainDriver.java)

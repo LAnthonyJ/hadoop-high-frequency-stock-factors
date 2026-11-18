@@ -1,0 +1,5 @@
+tradingDay,tradeTime,unused2,unused3,stockCode,unused5,unused6,unused7,unused8,unused9,unused10,unused11,totalBidVolume,totalAskVolume,unused14,unused15,unused16,bidPrice1,bidVolume1,askPrice1,askVolume1,bidPrice2,bidVolume2,askPrice2,askVolume2,bidPrice3,bidVolume3,askPrice3,askVolume3,bidPrice4,bidVolume4,askPrice4,askVolume4,bidPrice5,bidVolume5,askPrice5,askVolume5,unused37
+20250106,093000,,,DEMO_A,,,,,,,,900,700,,,,100.00,120,100.04,80,99.99,180,100.05,120,99.98,240,100.06,180,99.97,160,100.07,140,99.96,200,100.08,180,0
+20250106,093000,,,DEMO_B,,,,,,,,250,250,,,,50.00,50,50.02,50,49.99,50,50.03,50,49.98,50,50.04,50,49.97,50,50.05,50,49.96,50,50.06,50,0
+20250106,093003,,,DEMO_A,,,,,,,,900,700,,,,100.02,120,100.06,80,100.01,180,100.07,120,100.00,240,100.08,180,99.99,160,100.09,140,99.98,200,100.10,180,0
+20250106,093003,,,DEMO_B,,,,,,,,250,250,,,,50.01,50,50.03,50,50.00,50,50.04,50,49.99,50,50.05,50,49.98,50,50.06,50,49.97,50,50.07,50,0

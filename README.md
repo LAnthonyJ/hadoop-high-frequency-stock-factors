@@ -1,4 +1,4 @@
-![Hadoop high-frequency stock factors. Five levels of a synthetic order book show 900 units on the bid side and 700 on the ask side.](docs/images/order-book.png)
+[![Hadoop high-frequency stock factors. End-to-end runtime fell from over 100 seconds with a full sort to 24 seconds with single-pass aggregation in the course benchmark, saving over 76% of runtime.](docs/images/runtime-benchmark.png)](#course-results)
 
 **How much buying pressure is visible across a basket of stocks at 09:30:00?** This Java batch job reads high-frequency equity snapshots, measures each stock’s five best bid and ask levels, and uses Hadoop MapReduce to produce 20 market-wide factors at each observed timestamp. The original course study used CSI 300 market data. The small example below uses synthetic quotes you can run yourself.
 
@@ -6,7 +6,7 @@
 
 ## From quotes to factors
 
-The cover shows the first snapshot for stock A. Buyers have posted 900 units across five levels, while sellers have posted 700. Its five-level depth imbalance is therefore `(900 − 700) / (900 + 700) = 0.125`. Stock B has equal depth on both sides. At the same timestamp, the reducer averages their factor values.
+The [five-level order book](docs/images/order-book.png) shows the first snapshot for stock A. Buyers have posted 900 units across five levels, while sellers have posted 700. Its five-level depth imbalance is therefore `(900 − 700) / (900 + 700) = 0.125`. Stock B has equal depth on both sides. At the same timestamp, the reducer averages their factor values.
 
 | At 09:30:00 | Best bid | Best ask | Spread · α1 | Midprice · α3 | Depth imbalance · α5 |
 |---|---:|---:|---:|---:|---:|

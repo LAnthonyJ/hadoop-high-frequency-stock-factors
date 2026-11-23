@@ -6,22 +6,22 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * 聚合结果对象。
- * 存储某时刻所有股票的因子总和和股票数量
- * 用于计算最终的平均值: Avg=Sum / Count
+ * Accumulator for a single timestamp.
+ * Keep the sum of each factor and the number of contributing stocks.
+ * Divide sums by the observation count to obtain averages.
  */
 public class FactorSumCountWritable implements Writable {
 
-    //存储20个因子的累加和
+    // Sums for 20 factors.
     public double[] sums = new double[20];
-    //存储累加了多少只股票
+    // Number of contributing stocks.
     public int count = 0;
 
     public FactorSumCountWritable() {}
 
     /**
-     * 将单只股票的计算结果加入累加器
-     * @param factors 单只股票的 20 个因子数组
+     * Add one stock's factors to the accumulator.
+     * @param factors array of 20 factors for one stock
      */
     public void add(double[] factors) {
         for (int i = 0; i < 20; i++) {
@@ -31,7 +31,7 @@ public class FactorSumCountWritable implements Writable {
     }
 
     /**
-     * 合并另一个累加器 (用于 Driver 端合并多个 Reducer 的输出)
+     * Merge another accumulator, including when combining reducer output.
      */
     public void merge(FactorSumCountWritable other) {
         for (int i = 0; i < 20; i++) {
@@ -41,7 +41,7 @@ public class FactorSumCountWritable implements Writable {
     }
 
     /**
-     * 计算平均值 (Driver输出最终CSV时使用)
+     * Compute averages for the final CSV output.
      */
     public double[] calculateAverage() {
         double[] avg = new double[20];
@@ -50,12 +50,12 @@ public class FactorSumCountWritable implements Writable {
                 avg[i] = sums[i] / count;
             }
         }
-        return avg; // 如果 count=0，返回全0数组
+        return avg; // Return zeros when there are no observations.
     }
     /**
-     * 序列化逻辑：将累加器的内部状态序列化为二进制流。
-     * 先写入 4 字节的 count，紧接着顺序写入 20 个 8 字节的 double。
-     * 这种固定长度且无冗余字段的设计，极大提升了 Hadoop 内部排序和拉取数据（Fetch）的效率。
+     * Serialize the accumulator to a binary stream.
+     * Write the four-byte count followed by twenty eight-byte doubles.
+     * The fixed-width layout avoids redundant fields during sort and fetch.
      */
     @Override
     public void write(DataOutput out) throws IOException {
@@ -65,8 +65,8 @@ public class FactorSumCountWritable implements Writable {
         }
     }
     /**
-     * 反序列化逻辑：从二进制流中恢复累加器的数据状态。
-     * 必须保持与 write 方法完全镜像对称的读取顺序。
+     * Restore the accumulator from the stream.
+     * Read fields in the same order as write().
      */
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -76,8 +76,8 @@ public class FactorSumCountWritable implements Writable {
         }
     }
     /**
-     * 重写 toString 方法：
-     * 仅用于调试和日志输出，展示当前对象聚合了多少只股票的数据。
+     * Format the accumulator for debugging.
+     * Include the number of stocks represented in log messages.
      */
     @Override
     public String toString() {

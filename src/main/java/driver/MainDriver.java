@@ -19,98 +19,98 @@ import java.io.IOException;
 public class MainDriver {
 
     public static void main(String[] args) throws Exception {
-        // 校验参数，确保输入路径和输出路径已通过命令行传入
+        // Validate the input and output paths
         if (args.length < 2) {
             System.err.println("Usage: MainDriver <InputPath> <OutputPath>");
             System.exit(-1);
         }
 
-        //初始化 Hadoop 全局配置对象
-        Configuration conf = new Configuration();//hadoop初始化
-        //增大Map端环形排序缓冲区：设置为512MB，减少溢写次数，降低磁盘IO
+        // Initialize the Hadoop configuration
+        Configuration conf = new Configuration();// Job configuration
+        // A 512 MB map-side sort buffer reduces spills and disk I/O.
         conf.set("mapreduce.task.io.sort.mb", "512");
-        //配置Map任务JVM参数
-        //-XX:NewRatio=2调整年轻代比例，因为计算过程会产生大量临时Writable对象，优化GC频率。
+        // Set JVM options for map tasks.
+        // NewRatio=2 accommodates the short-lived Writable objects allocated during processing.
         conf.set("mapreduce.map.java.opts", "-Xms1536m -Xmx1536m -XX:NewRatio=2");
-        //复用JVM进程
+        // Reuse JVMs across tasks.
         conf.set("mapreduce.job.jvm.num.tasks", "-1");
-        //递归读取输入目录，从多级子文件夹中自动搜寻并加载行情快照原始数据文件
+        // Read snapshot files recursively from the input directory.
         conf.setBoolean("mapreduce.input.fileinputformat.input.dir.recursive", true);
 
-        // 启用Map输出压缩，减少从Mapper到Reducer跨网络传输的数据量
+        // Compress mapper output before the shuffle.
         conf.setBoolean("mapreduce.map.output.compress", true);
-        // 使用Snappy算法，压缩比与CPU消耗之间达到了极佳平衡
+        // Snappy balances compression with CPU cost.
         conf.set("mapreduce.map.output.compress.codec", "org.apache.hadoop.io.compress.SnappyCodec");
 
         Path inputPath = new Path(args[0]);
         Path finalOutputPath = new Path(args[1]);
 
 
-        //Job配置
-        //实例化Job对象
+        // Configure the job.
+        // Create the job instance.
         Job job = Job.getInstance(conf, "Optimized_Factor_Job");
         job.setJarByClass(MainDriver.class);
 
-        //设置Mapper,Combiner和Reducer
+        // Assign the mapper, combiner and reducer.
         job.setMapperClass(FactorMapper.class);
-        job.setCombinerClass(FactorCombiner.class); //Map端预聚合
-        // 由于CSV文件内300只股票在同一时刻的数据量很大，此举能将发往Reducer的数据压缩90%以上
+        job.setCombinerClass(FactorCombiner.class); // Aggregate locally before shuffling.
+        // Combining snapshots for 300 stocks at each timestamp can reduce shuffle volume by over 90%.
         job.setReducerClass(FactorReducer.class);
 
-        //Map阶段输出的Key/Value类型
-        //Key为时间戳LongWritable，Value包含20档因子累加和的自定义Writable对象
+        // Map output types
+        // Each timestamp maps to a Writable containing sums for 20 factors.
         job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(FactorSumCountWritable.class);
 
-        //Reduce阶段最终输出的Key/Value类型
+        // Final output types
         job.setOutputKeyClass(NullWritable.class);
-        job.setOutputValueClass(Text.class); // 直接输出格式化好的CSV行
+        job.setOutputValueClass(Text.class); // Emit formatted CSV rows.
 
-        //并发设置，确保时间排序正常
+        // Use the configured reducer count to preserve timestamp ordering.
         job.setNumReduceTasks(1);
 
-        //输入格式：合并小文件，针对4核环境切片设为512MB左右最均衡
+        // Combine small input files into roughly 512 MB splits on the four-core setup.
         job.setInputFormatClass(CombineTextInputFormat.class);
         CombineTextInputFormat.setMaxInputSplitSize(job, 512 * 1024 * 1024);
 
-        //输出格式：使用LazyOutputFormat
+        // Use lazy output creation.
         LazyOutputFormat.setOutputFormatClass(job, TextOutputFormat.class);
 
         FileInputFormat.setInputPaths(job, inputPath);
         FileOutputFormat.setOutputPath(job, finalOutputPath);
 
-        //后处理
+        // Postprocess the output.
         long startTime = System.currentTimeMillis();
         boolean success = job.waitForCompletion(true);
 
         if (success) {
-            //计算完成后，执行轻量级的HDFS后处理
+            // Finalize the CSV files in HDFS after the job succeeds.
             System.out.println("Job finished, starting post-processing...");
             postProcess(finalOutputPath, conf);
 
-            long endTime = System.currentTimeMillis();// 记录结束时间
+            long endTime = System.currentTimeMillis();// Record the completion time.
             System.out.println("Total Project Time: " + (endTime - startTime) + " ms");
         }
-        //根据执行状态码安全退出JVM
+        // Exit with the job status.
         System.exit(success ? 0 : 1);
     }
 
-    //在HDFS上完成文件重命名和表头添加
+    // Rename output files and add column headers in HDFS.
     private static void postProcess(Path outPath, Configuration conf) throws IOException {
         FileSystem fs = FileSystem.get(conf);
         FileStatus[] files = fs.listStatus(outPath);
 
-        //定义CSV表头字符串
+        // Build the CSV header.
         String header = "tradeTime,alpha_1,alpha_2,alpha_3,alpha_4,alpha_5,alpha_6,alpha_7,alpha_8,alpha_9,alpha_10," +
                 "alpha_11,alpha_12,alpha_13,alpha_14,alpha_15,alpha_16,alpha_17,alpha_18,alpha_19,alpha_20\n";
 
         for (FileStatus f : files) {
             String name = f.getPath().getName();
             if (name.contains("-r-") && !name.startsWith(".")) {
-                //提取文件名中的日期部分
+                // Extract the date from the filename.
                 String datePart = name.split("-")[0];
                 Path finalCsvPath = new Path(outPath, datePart + ".csv");
-                //处理多副本写入情况
+                // Handle multiple output parts.
                 boolean exists = fs.exists(finalCsvPath);
 
                 try (FSDataInputStream in = fs.open(f.getPath());
@@ -121,11 +121,11 @@ public class MainDriver {
                     }
                     IOUtils.copyBytes(in, out, conf, false);
                 }
-                //删除旧的HDFS临时文件
+                // Remove the old temporary file in HDFS.
                 fs.delete(f.getPath(), false);
             }
         }
-        // 清理作业产生的 _SUCCESS 文件
+        // Remove the job's _SUCCESS marker.
         fs.delete(new Path(outPath, "_SUCCESS"), false);
         System.out.println("All CSV files are ready in: " + outPath.toString());
     }

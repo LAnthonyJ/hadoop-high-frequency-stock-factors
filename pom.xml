@@ -15,13 +15,13 @@
     </properties>
 
     <dependencies>
-        <!-- 文档推荐的API依赖（🔶1-186） -->
+        <!-- API dependency recommended in section 1-186 of the documentation -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client-api</artifactId>
             <version>3.4.1</version>
         </dependency>
-        <!-- 补充运行时依赖，解决InputBootstrapper类缺失问题 -->
+        <!-- Runtime dependency that provides the missing InputBootstrapper class -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client-runtime</artifactId>

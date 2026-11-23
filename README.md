@@ -71,4 +71,4 @@ For other inputs, preserve the [sample’s positional CSV layout](examples/snaps
 
 In the original pseudo-distributed Docker experiment, the full-sort baseline sent **7.2 million detail records** into the shuffle and took **more than 100 seconds** end to end. The final single-job design finished in **24 seconds** in that environment. These figures come from the course evaluation. The four-row example above demonstrates correctness on a small input. [Technical report, §6.1 (PDF, Chinese)](docs/report.pdf)
 
-[Assignment brief (PDF)](docs/assignment.pdf) · [Architecture slides (PowerPoint, Chinese)](docs/高频数据量化因子分布式计算架构.pptx) · [Job configuration and CSV writer](src/main/java/driver/MainDriver.java)
+[Assignment brief (PDF)](docs/assignment.pdf) · [Architecture slides (PowerPoint, Chinese)](docs/%E9%AB%98%E9%A2%91%E6%95%B0%E6%8D%AE%E9%87%8F%E5%8C%96%E5%9B%A0%E5%AD%90%E5%88%86%E5%B8%83%E5%BC%8F%E8%AE%A1%E7%AE%97%E6%9E%B6%E6%9E%84.pptx) · [Job configuration and CSV writer](src/main/java/driver/MainDriver.java)
